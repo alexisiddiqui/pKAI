@@ -1,0 +1,128 @@
+{
+  "passed": true,
+  "upstream_models_sha256_unchanged": true,
+  "upstream_outputs_bit_identical": true,
+  "prediction_tolerance": 1e-06,
+  "structures": [
+    {
+      "complex_id": "00d0d4684d9d5ad5",
+      "pdb_sha256": "059b9056fdcf1e5a76f23562ce5352f8728a3588a3ccfcf0a5b833f5b41f02ab",
+      "models": {
+        "pKAI": {
+          "sites": 162,
+          "width": 4008,
+          "feature_sha256": "db4e05dd75ea83932ba7b17bdb865370dc61578f189c8ee2be55eb99ce11d95b"
+        },
+        "pKAI+": {
+          "sites": 162,
+          "width": 4008,
+          "feature_sha256": "db4e05dd75ea83932ba7b17bdb865370dc61578f189c8ee2be55eb99ce11d95b"
+        },
+        "pKAI-joint": {
+          "sites": 162,
+          "width": 4008,
+          "feature_sha256": "db4e05dd75ea83932ba7b17bdb865370dc61578f189c8ee2be55eb99ce11d95b",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0
+        },
+        "pKAI-joint-aa20": {
+          "sites": 162,
+          "width": 9008,
+          "feature_sha256": "b50fa1305bbc2a3772dc359596f1b43d914f4cadfeb386ad17199195be476a7e",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0
+        },
+        "pKAI-joint-aa20-backbone": {
+          "sites": 162,
+          "width": 9008,
+          "feature_sha256": "7e8cbca760346fda505e568e7d872a39888f9d16e532253ec1504de81b342eb7",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0,
+          "backbone_sidechains_ignored": true,
+          "missing_ca_rejected": true
+        }
+      },
+      "aa20_aliases_and_tie_truncation": true
+    },
+    {
+      "complex_id": "014b3b8ff6660d74",
+      "pdb_sha256": "4e880058bde29291382529cca14a84bf4119683cc7b007721c4aab528a130170",
+      "models": {
+        "pKAI": {
+          "sites": 76,
+          "width": 4008,
+          "feature_sha256": "1633118b253225bf7174759d5170d075dbc32fb712df441997d8b4196e359482"
+        },
+        "pKAI+": {
+          "sites": 76,
+          "width": 4008,
+          "feature_sha256": "1633118b253225bf7174759d5170d075dbc32fb712df441997d8b4196e359482"
+        },
+        "pKAI-joint": {
+          "sites": 76,
+          "width": 4008,
+          "feature_sha256": "1633118b253225bf7174759d5170d075dbc32fb712df441997d8b4196e359482",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0
+        },
+        "pKAI-joint-aa20": {
+          "sites": 76,
+          "width": 9008,
+          "feature_sha256": "cad2cb666d99e15b2c1f67e19b7b3af74de332d34cfc547b07676ffb9f27e90e",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0
+        },
+        "pKAI-joint-aa20-backbone": {
+          "sites": 76,
+          "width": 9008,
+          "feature_sha256": "d86e45017ea9b05f6b792829f70e119544af6eb1d5dd2e9b3adabc68e20d464d",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0,
+          "backbone_sidechains_ignored": true,
+          "missing_ca_rejected": true
+        }
+      },
+      "aa20_aliases_and_tie_truncation": true
+    },
+    {
+      "complex_id": "041b23208a10ebd6",
+      "pdb_sha256": "09029a030f49e25a548abb231d0ef386300adf1f875d497c7473cc6ad0c46366",
+      "models": {
+        "pKAI": {
+          "sites": 176,
+          "width": 4008,
+          "feature_sha256": "75c5117f62ea7aa4d2433662a7cb9014c582e0ff1a3a20ce51b631be0d6a59b5"
+        },
+        "pKAI+": {
+          "sites": 176,
+          "width": 4008,
+          "feature_sha256": "75c5117f62ea7aa4d2433662a7cb9014c582e0ff1a3a20ce51b631be0d6a59b5"
+        },
+        "pKAI-joint": {
+          "sites": 176,
+          "width": 4008,
+          "feature_sha256": "75c5117f62ea7aa4d2433662a7cb9014c582e0ff1a3a20ce51b631be0d6a59b5",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0
+        },
+        "pKAI-joint-aa20": {
+          "sites": 176,
+          "width": 9008,
+          "feature_sha256": "db64b4f30c59fc869d9268b7799dcab18b4e99100d8278d12f768bfc930e0592",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0
+        },
+        "pKAI-joint-aa20-backbone": {
+          "sites": 176,
+          "width": 9008,
+          "feature_sha256": "ba0e51090e7ba24fa701a06f7ec665894b003e35e606dce82ae2231d68441240",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0,
+          "backbone_sidechains_ignored": true,
+          "missing_ca_rejected": true
+        }
+      },
+      "aa20_aliases_and_tie_truncation": true
+    }
+  ]
+}

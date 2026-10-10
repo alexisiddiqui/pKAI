@@ -20,7 +20,9 @@ def pKAI(pdb, model_name="pKAI", device="cpu", threads=None):
         torch.set_num_threads(threads)
     model = load_model(model_name, device)
     prot = Protein(pdb)
-    if model_name == "pKAI-joint-aa20":
+    if model_name == "pKAI-joint-aa20-backbone":
+        prot.apply_backbone_cutoff()
+    elif model_name == "pKAI-joint-aa20":
         prot.apply_cutoff(encoding="atom16aa20")
     else:
         prot.apply_cutoff()
@@ -34,7 +36,7 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        choices=["pKAI", "pKAI+", "pKAI-joint", "pKAI-joint-aa20"],
+        choices=["pKAI", "pKAI+", "pKAI-joint", "pKAI-joint-aa20", "pKAI-joint-aa20-backbone"],
         help="Model to use",
         default="pKAI",
     )

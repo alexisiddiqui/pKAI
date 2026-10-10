@@ -92,6 +92,33 @@ The committed [release validation receipt](tests/release-validation.json) record
 (414 titratable sites): both new feature encodings and predictions matched jax-Ka exactly, and upstream pKAI and
 pKAI+ outputs remained bit-identical.
 
+### Backbone-only atom16+aa20 model
+
+`pKAI-joint-aa20-backbone` adds the matching 100%-data, joint-objective, seed-17 backbone checkpoint.
+Its pKPDB validation MSE is **0.9206641038544965**. It uses the same 9,008-input architecture, batch size 4,096,
+learning rate `5.12e-4`, cosine schedule, and 40-epoch cap as `pKAI-joint-aa20`, trained with backbone features.
+
+For each query residue, the feature encoder uses its C-alpha as the origin and keeps N/O atoms of other residues
+within 15 Å, sorted by distance, atom class, and amino-acid identity, truncated to 250 slots. Each slot contains
+16 atom-class and 20 amino-acid channels scaled by `1/distance**2`, followed by the eight site-identity channels.
+Side-chain coordinates are ignored. The query C-alpha must be present; a missing C-alpha raises an explicit error.
+This feature path is selected only by `pKAI-joint-aa20-backbone`; the original and all-atom model paths are unchanged.
+
+```bash
+python3 -m pip install 'git+https://github.com/alexisiddiqui/pKAI.git@joint-aa20-backbone'
+pKAI protein.pdb --model pKAI-joint-aa20-backbone
+```
+
+The checkpoint is `training/pkai-joint-scale-v1-f100-atom16aa20/runs/backbone-joint-b4096-e40-lr0.000512-cos/seed-17/best.pt`
+under the pkabench runtime. The training backbone encoder and the extended export action are available at
+[jax-Ka commit `31fc9d027f5ba8289d5da37d23b22947e2684b76`](https://github.com/alexisiddiqui/jax-Ka/tree/31fc9d027f5ba8289d5da37d23b22947e2684b76)
+in `src/pkabench/pkai_backbone_pinder_eval.py` and `src/pkatrain/pkai_joint_scale.py`.
+The model and its export-check receipt are bundled under `pKAI/models/`.
+The weight file is **30,450,346 bytes**. Reloaded export predictions and MSE matched the checkpoint exactly across
+all 7,778 validation sites. The [backbone release validation receipt](tests/backbone-release-validation.json)
+records matching training features and predictions on three validation PDBs (414 sites), unchanged existing-model
+outputs, identical backbone predictions after side-chain removal, and rejection of missing query C-alpha atoms.
+
 ## pKAI+ vs pKAI models
 
 pKAI+ aims to predict experimental p<i>K</i><sub>a</sub> values from a single conformation. To do such, the interactions characterized in the input structure are given less weight and, as a consequence, the predictions are closer to the p<i>K</i><sub>a</sub> values of the residues in water. This effect is comparable to an increase in the dielectric constant of the protein in Poisson-Boltzmann models. In these models, the dielectric constant tries to capture, among others, electronic polarization and side-chain reorganization. When including conformational sampling explicitly, one should use a lower value for the dielectric constant of the protein. Likewise, one should use pKAI -- instead of pKAI+ -- as in this model there is no penalization of the interactions' impact on the predicted p<i>K</i><sub>a</sub> values.
