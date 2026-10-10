@@ -157,17 +157,18 @@ class Residue:
         self.input_sort()
         self.apply_ohe()
 
-    def encode_input_aa20(self):
-        """250 slots of atom16 + aa20, followed by the original eight site channels.
+    def encode_input_aa20(self, slots=None):
+        """Configurable slots of atom16 + aa20, followed by the original eight site channels.
 
         Keep the training encoder's (distance, atom class, amino-acid index) tie order. Both active channels in
         each slot receive 1/distance**2. The original encode_input path is unchanged.
         """
         self.encode_atoms()
-        environment = torch.zeros(self.env_tensor_size, 36, dtype=torch.float32)
+        slots = self.env_tensor_size if slots is None else slots
+        environment = torch.zeros(slots, 36, dtype=torch.float32)
         neighbours = sorted(zip(self.env_dists, self.env_oheclasses,
                                 [aa20_index(name) for name in self.env_resnames]))
-        for slot, (distance, atom_class, aa) in enumerate(neighbours[:self.env_tensor_size]):
+        for slot, (distance, atom_class, aa) in enumerate(neighbours[:slots]):
             if distance == 0:
                 raise ValueError("Coincident pKAI environment/reference atoms")
             value = 1 / (float(distance) ** 2)

@@ -1,5 +1,6 @@
 from residue import Residue
 import torch
+import math
 
 PK_MODS = {
     "ASP": 3.79,
@@ -110,6 +111,32 @@ class Protein:
                 residue.encode_input_aa20()
             else:
                 residue.encode_input()
+
+    def apply_backbone_cutoff(self, cutoff_dist=15, slots=250):
+        """Strict N/O backbone context centred on the query C-alpha, with atom16+aa20 slots."""
+        ca = {}
+        with open(self.pdb_f) as handle:
+            for line in handle:
+                if not line.startswith("ATOM ") or line[12:16].strip() != "CA":
+                    continue
+                _, _, alternate, _, chain, number, x, y, z, insertion = self.read_pdb_line(line)
+                if alternate in (" ", "A") and insertion == " ":
+                    ca[(chain, number)] = (x, y, z)
+        context = [atom for atom in self.iter_atoms() if atom.aname in ("N", "O")]
+        for residue in self.iter_residues(titrable_only=True):
+            key = (residue.chain, residue.resnumb)
+            if key not in ca:
+                raise ValueError(f"missing C-alpha for backbone pKAI site {key}")
+            origin = ca[key]
+            for atom in context:
+                if atom.residue is residue:
+                    continue
+                distance = math.sqrt(sum((value - center) ** 2 for value, center in zip(atom.coords, origin)))
+                if distance < cutoff_dist:
+                    residue.env_anames.append(atom.aname)
+                    residue.env_resnames.append(atom.residue.resname)
+                    residue.env_dists.append(distance)
+            residue.encode_input_aa20(slots=slots)
 
     def predict_pkas(self, model, device):
         pks = []
