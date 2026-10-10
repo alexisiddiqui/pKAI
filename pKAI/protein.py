@@ -97,13 +97,19 @@ class Protein:
         z = float(line[46:54])
         return (aname, anumb, b, resname, chain, resnumb, x, y, z, icode)
 
-    def apply_cutoff(self, cutoff_dist=15):
+    def apply_cutoff(self, cutoff_dist=15, encoding="atom16"):
+
+        if encoding not in ("atom16", "atom16aa20"):
+            raise ValueError(f"unsupported pKAI encoding: {encoding}")
 
         # TODO speed up by doing distance matrix a priori in cython
 
         for residue in self.iter_residues(titrable_only=True):
             residue.calc_cutoff_atoms(cutoff_dist)
-            residue.encode_input()
+            if encoding == "atom16aa20":
+                residue.encode_input_aa20()
+            else:
+                residue.encode_input()
 
     def predict_pkas(self, model, device):
         pks = []
