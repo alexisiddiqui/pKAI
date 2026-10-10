@@ -92,7 +92,7 @@ The committed [release validation receipt](tests/release-validation.json) record
 (414 titratable sites): both new feature encodings and predictions matched jax-Ka exactly, and upstream pKAI and
 pKAI+ outputs remained bit-identical.
 
-### Backbone-only atom16+aa20 model
+### Backbone-only atom16+aa20 models
 
 `pKAI-joint-aa20-backbone` adds the matching 100%-data, joint-objective, seed-17 backbone checkpoint.
 Its pKPDB validation MSE is **0.9206641038544965**. It uses the same 9,008-input architecture, batch size 4,096,
@@ -102,22 +102,31 @@ For each query residue, the feature encoder uses its C-alpha as the origin and k
 within 15 Å, sorted by distance, atom class, and amino-acid identity, truncated to 250 slots. Each slot contains
 16 atom-class and 20 amino-acid channels scaled by `1/distance**2`, followed by the eight site-identity channels.
 Side-chain coordinates are ignored. The query C-alpha must be present; a missing C-alpha raises an explicit error.
-This feature path is selected only by `pKAI-joint-aa20-backbone`; the original and all-atom model paths are unchanged.
+This feature path is selected by the backbone model choices; the original and all-atom model paths are unchanged.
 
 ```bash
 python3 -m pip install 'git+https://github.com/alexisiddiqui/pKAI.git@joint-aa20-backbone'
 pKAI protein.pdb --model pKAI-joint-aa20-backbone
+pKAI protein.pdb --model pKAI-joint-aa20-backbone-r20s540
 ```
 
 The checkpoint is `training/pkai-joint-scale-v1-f100-atom16aa20/runs/backbone-joint-b4096-e40-lr0.000512-cos/seed-17/best.pt`
 under the pkabench runtime. The training backbone encoder and the extended export action are available at
-[jax-Ka commit `31fc9d027f5ba8289d5da37d23b22947e2684b76`](https://github.com/alexisiddiqui/jax-Ka/tree/31fc9d027f5ba8289d5da37d23b22947e2684b76)
+[jax-Ka commit `3bfffc2b6ad62acab9ba8281d6a2d7fbef819875`](https://github.com/alexisiddiqui/jax-Ka/tree/3bfffc2b6ad62acab9ba8281d6a2d7fbef819875)
 in `src/pkabench/pkai_backbone_pinder_eval.py` and `src/pkatrain/pkai_joint_scale.py`.
 The model and its export-check receipt are bundled under `pKAI/models/`.
 The weight file is **30,450,346 bytes**. Reloaded export predictions and MSE matched the checkpoint exactly across
 all 7,778 validation sites. The [backbone release validation receipt](tests/backbone-release-validation.json)
 records matching training features and predictions on three validation PDBs (414 sites), unchanged existing-model
 outputs, identical backbone predictions after side-chain removal, and rejection of missing query C-alpha atoms.
+
+`pKAI-joint-aa20-backbone-r20s540` uses the same backbone atom16+aa20 encoding and training settings,
+with a **20 Å distance cutoff and 540 nearest-neighbour slots** (19,448 input channels). Its pKPDB validation MSE
+is **0.9108001913010354**. The atom cutoff is the maximum neighbour count; the distance cutoff is 20 Å.
+Its checkpoint is `training/pkai-joint-scale-v1-f100-atom16aa20-r20s540/runs/backbone-joint-b4096-e40-lr0.000512-cos/seed-17/best.pt`.
+The TorchScript weight is **63,858,346 bytes** (below the 100 MB GitHub limit). Its parity receipt is included
+under `pKAI/models/`: export MSE and maximum prediction differences were both **0** on all 7,778 sites.
+The release check covers both slot counts and all six model choices.
 
 ## pKAI+ vs pKAI models
 

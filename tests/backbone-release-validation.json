@@ -40,6 +40,15 @@
           "prediction_max_absolute_error": 0.0,
           "backbone_sidechains_ignored": true,
           "missing_ca_rejected": true
+        },
+        "pKAI-joint-aa20-backbone-r20s540": {
+          "sites": 162,
+          "width": 19448,
+          "feature_sha256": "5ad7214b3f17d13bc5ef9787b05c964cdf1d64dee7508037f8f2b086c8e8b051",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0,
+          "backbone_sidechains_ignored": true,
+          "missing_ca_rejected": true
         }
       },
       "aa20_aliases_and_tie_truncation": true
@@ -80,6 +89,15 @@
           "prediction_max_absolute_error": 0.0,
           "backbone_sidechains_ignored": true,
           "missing_ca_rejected": true
+        },
+        "pKAI-joint-aa20-backbone-r20s540": {
+          "sites": 76,
+          "width": 19448,
+          "feature_sha256": "05f5ca461d9c33c5d11483015d59bb4263aaa0ee73f109dbfefbf858f697f4b4",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0,
+          "backbone_sidechains_ignored": true,
+          "missing_ca_rejected": true
         }
       },
       "aa20_aliases_and_tie_truncation": true
@@ -116,6 +134,15 @@
           "sites": 176,
           "width": 9008,
           "feature_sha256": "ba0e51090e7ba24fa701a06f7ec665894b003e35e606dce82ae2231d68441240",
+          "feature_max_absolute_error": 0.0,
+          "prediction_max_absolute_error": 0.0,
+          "backbone_sidechains_ignored": true,
+          "missing_ca_rejected": true
+        },
+        "pKAI-joint-aa20-backbone-r20s540": {
+          "sites": 176,
+          "width": 19448,
+          "feature_sha256": "34c49edeed363ebda9e823722a5f7bd90b2b380e4bddb12d0c2c5ddffccc89b6",
           "feature_max_absolute_error": 0.0,
           "prediction_max_absolute_error": 0.0,
           "backbone_sidechains_ignored": true,

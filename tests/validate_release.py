@@ -16,7 +16,8 @@ import sys
 
 
 MODELS = {"pKAI-joint": "atom16", "pKAI-joint-aa20": "atom16aa20",
-          "pKAI-joint-aa20-backbone": "atom16aa20"}
+          "pKAI-joint-aa20-backbone": "atom16aa20",
+          "pKAI-joint-aa20-backbone-r20s540": "atom16aa20"}
 ARM = "full-joint-b4096-e40-lr0.000512-cos/seed-17"
 
 
@@ -24,7 +25,7 @@ def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def training_backbone_features(pdb, protein, encoding):
+def training_backbone_features(pdb, protein, encoding, cutoff=15, slots=250):
     """Use the actual training encoder with the PDB's decimal coordinates preserved as float64."""
     import numpy as np
     from types import SimpleNamespace
@@ -43,7 +44,13 @@ def training_backbone_features(pdb, protein, encoding):
                             ins_code=np.full(len(records), ""),
                             coord=np.asarray([r[6:9] for r in records], dtype=np.float64))
     keys = [(r.chain, r.resnumb, "", r.resname) for r in protein.iter_residues(titrable_only=True)]
-    features, retained = _features(atoms, keys, encoding)
+    import pkatrain.pkai_scratch as scratch
+    old = scratch.CUTOFF, scratch.SLOTS
+    try:
+        scratch.CUTOFF, scratch.SLOTS = cutoff, slots
+        features, retained = _features(atoms, keys, encoding)
+    finally:
+        scratch.CUTOFF, scratch.SLOTS = old
     if not retained.all(): raise AssertionError("training encoder rejected backbone sites")
     return features
 
@@ -61,9 +68,11 @@ def worker(args):
     for name in ("pKAI", "pKAI+", *MODELS):
         if name in MODELS and args.original: continue
         encoding = MODELS.get(name, "atom16")
-        mode = "backbone" if name.endswith("-backbone") else "full"
+        mode = "backbone" if "-backbone" in name else "full"
+        wide = name.endswith("-r20s540")
+        geometry = {"cutoff_dist": 20 if wide else 15, "slots": 540 if wide else 250}
         protein = Protein(args.pdb)
-        if mode == "backbone": protein.apply_backbone_cutoff()
+        if mode == "backbone": protein.apply_backbone_cutoff(**geometry)
         elif encoding == "atom16": protein.apply_cutoff()
         else: protein.apply_cutoff(encoding=encoding)
         x = torch.stack([residue.input_layer for residue in protein.iter_residues(titrable_only=True)])
@@ -80,14 +89,15 @@ def worker(args):
         if name in MODELS:
             sys.path.insert(0, str(Path(args.training_repo) / "src"))
             from pkatrain.pkai_scratch import feature_matrix, feature_width, model_class
-            if mode == "backbone": expected_x = training_backbone_features(args.pdb, Protein(args.pdb), encoding)
+            if mode == "backbone": expected_x = training_backbone_features(args.pdb, Protein(args.pdb), encoding, geometry["cutoff_dist"], geometry["slots"])
             else: _, expected_x = feature_matrix(Protein(args.pdb), encoding)
             feature_error = float(np.max(np.abs(x.numpy() - expected_x)))
             np.testing.assert_allclose(x.numpy(), expected_x, rtol=0, atol=1e-7)
             suffix = "" if encoding == "atom16" else "-atom16aa20"
+            if wide: suffix += "-r20s540"
             arm = ARM.replace("full-", "backbone-", 1) if mode == "backbone" else ARM
             run = Path(args.runtime) / f"training/pkai-joint-scale-v1-f100{suffix}/runs" / arm
-            eager = model_class(torch, inputs=feature_width(encoding))()
+            eager = model_class(torch, inputs=expected_x.shape[1])()
             eager.load_state_dict(torch.load(run / "best.pt", map_location="cpu", weights_only=True)); eager.eval()
             with torch.inference_mode(): expected = eager(torch.from_numpy(expected_x))
             prediction_error = float((prediction - expected).abs().max())
@@ -105,7 +115,7 @@ def worker(args):
                     stripped = Path(directory) / "backbone.pdb"
                     stripped.write_text("".join(line for line in lines if not line.startswith("ATOM ")
                                                 or line[12:16].strip() in ("N", "CA", "C", "O")))
-                    no_sidechain = Protein(stripped); no_sidechain.apply_backbone_cutoff()
+                    no_sidechain = Protein(stripped); no_sidechain.apply_backbone_cutoff(**geometry)
                     stripped_x = torch.stack([r.input_layer for r in no_sidechain.iter_residues(titrable_only=True)])
                     assert torch.equal(x, stripped_x), "side chains changed backbone features"
                     with redirect_stdout(io.StringIO()): stripped_result = api.pKAI(stripped, model_name=name, threads=2)
@@ -113,7 +123,7 @@ def worker(args):
                     missing_ca = Path(directory) / "missing-ca.pdb"
                     missing_ca.write_text("".join(line for line in lines if not line.startswith("ATOM ")
                                                  or line[12:16].strip() != "CA"))
-                    try: Protein(missing_ca).apply_backbone_cutoff()
+                    try: Protein(missing_ca).apply_backbone_cutoff(**geometry)
                     except ValueError as error: assert "missing C-alpha" in str(error)
                     else: raise AssertionError("missing query CA was accepted")
                 check.update(backbone_sidechains_ignored=True, missing_ca_rejected=True)
@@ -125,17 +135,19 @@ def worker(args):
         try: aa20_index("UNK")
         except ValueError: pass
         else: raise AssertionError("unknown amino acid accepted")
-        # Equal-distance/equal-class slots must use the same amino-acid tie break as training, then truncate at 250.
-        residue = Residue(None, "A", "ASP", 1)
-        residue.env_anames = ["OD1"] * 251
-        residue.env_resnames = ["GLU", "ASP"] * 125 + ["ASP"]
-        residue.env_dists = [2.0] * 251
-        residue.encode_input_aa20()
-        slots = residue.input_layer[:9000].reshape(250, 36)
-        assert torch.all(slots[:, ATOM_OHE.index("O_COOH")] == 0.25)
-        assert torch.all(slots[:126, 16 + AA20.index("ASP")] == 0.25)
-        assert torch.all(slots[126:, 16 + AA20.index("GLU")] == 0.25)
-        assert residue.input_layer[9000 + RES_OHE.index("ASP")] == 1
+        # Check tie ordering and truncation for both released slot counts.
+        for count in (250, 540):
+            residue = Residue(None, "A", "ASP", 1)
+            residue.env_anames = ["OD1"] * (count + 1)
+            residue.env_resnames = ["GLU", "ASP"] * (count // 2) + ["ASP"]
+            residue.env_dists = [2.0] * (count + 1)
+            residue.encode_input_aa20(slots=count)
+            slots = residue.input_layer[:count * 36].reshape(count, 36)
+            split = count // 2 + 1
+            assert torch.all(slots[:, ATOM_OHE.index("O_COOH")] == 0.25)
+            assert torch.all(slots[:split, 16 + AA20.index("ASP")] == 0.25)
+            assert torch.all(slots[split:, 16 + AA20.index("GLU")] == 0.25)
+            assert residue.input_layer[count * 36 + RES_OHE.index("ASP")] == 1
         report["aa20_aliases_and_tie_truncation"] = True
     print(json.dumps(report))
 

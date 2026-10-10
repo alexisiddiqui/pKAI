@@ -112,7 +112,7 @@ class Protein:
             else:
                 residue.encode_input()
 
-    def apply_backbone_cutoff(self, cutoff_dist=15):
+    def apply_backbone_cutoff(self, cutoff_dist=15, slots=250):
         """Strict N/O backbone context centred on the query C-alpha, with atom16+aa20 slots."""
         ca = {}
         with open(self.pdb_f) as handle:
@@ -136,7 +136,7 @@ class Protein:
                     residue.env_anames.append(atom.aname)
                     residue.env_resnames.append(atom.residue.resname)
                     residue.env_dists.append(distance)
-            residue.encode_input_aa20()
+            residue.encode_input_aa20(slots=slots)
 
     def predict_pkas(self, model, device):
         pks = []
