@@ -33,6 +33,19 @@ ATOM_OHE = [
 
 RES_OHE = ["CTR", "CYS", "TYR", "GLU", "HIS", "ASP", "LYS", "NTR"]
 
+# The neighbour-residue channels used by jax-Ka's atom16aa20 encoding.
+AA20 = ("ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE",
+        "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL")
+AA20_ALIASES = {"MSE": "MET", "SEP": "SER", "TPO": "THR", "PTR": "TYR", "HID": "HIS", "HIE": "HIS", "HIP": "HIS",
+                "HSD": "HIS", "HSE": "HIS", "HSP": "HIS", "CYX": "CYS", "ASH": "ASP", "GLH": "GLU", "LYN": "LYS"}
+
+
+def aa20_index(resname):
+    name = AA20_ALIASES.get(str(resname).strip(), str(resname).strip())
+    if name not in AA20:
+        raise ValueError(f"non-canonical residue in pKAI environment: {resname}")
+    return AA20.index(name)
+
 
 class Residue:
     def __init__(self, protein, chain, resname, resnumb):
@@ -143,3 +156,23 @@ class Residue:
         self.encode_atoms()
         self.input_sort()
         self.apply_ohe()
+
+    def encode_input_aa20(self):
+        """250 slots of atom16 + aa20, followed by the original eight site channels.
+
+        Keep the training encoder's (distance, atom class, amino-acid index) tie order. Both active channels in
+        each slot receive 1/distance**2. The original encode_input path is unchanged.
+        """
+        self.encode_atoms()
+        environment = torch.zeros(self.env_tensor_size, 36, dtype=torch.float32)
+        neighbours = sorted(zip(self.env_dists, self.env_oheclasses,
+                                [aa20_index(name) for name in self.env_resnames]))
+        for slot, (distance, atom_class, aa) in enumerate(neighbours[:self.env_tensor_size]):
+            if distance == 0:
+                raise ValueError("Coincident pKAI environment/reference atoms")
+            value = 1 / (float(distance) ** 2)
+            environment[slot, ATOM_OHE.index(atom_class)] = value
+            environment[slot, 16 + aa] = value
+        site = torch.zeros(len(RES_OHE), dtype=torch.float32)
+        site[RES_OHE.index(self.resname)] = 1
+        self.input_layer = torch.cat((environment.reshape(-1), site))

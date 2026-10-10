@@ -1,0 +1,22 @@
+{
+  "checkpoint_sha256": "a2e9c7fb9c088cce3ce99855c762936e70dcf0fbe4cc222f52422cf099a64c56",
+  "encoding": "atom16aa20",
+  "export_pkpdb_mse": 0.27910175357817624,
+  "file_size_bytes": 30450346,
+  "forward_output_shape": [
+    "batch",
+    1
+  ],
+  "input_width": 9008,
+  "model_name": "pKAI-joint-aa20",
+  "model_sha256": "633ee8d669cf8a8b784e25978cbb470ef6c4ff132314d5cbc06a9e6daa41fb28",
+  "mse_absolute_error": 0.0,
+  "passed": true,
+  "prediction_max_absolute_error": 0.0,
+  "rescore_pkpdb_mse": 0.27910175357817624,
+  "run": "/scratch/u6xq/hussain.u6xq/_runtime/jax-Ka/pkabench/training/pkai-joint-scale-v1-f100-atom16aa20/runs/full-joint-b4096-e40-lr0.000512-cos/seed-17",
+  "tolerance": 1e-06,
+  "torch_version": "2.11.0+cu128",
+  "training_code_commit": "5ea7c176379635b3bb410cf9acd2c571af98616d",
+  "validation_sites": 7778
+}
